@@ -30,7 +30,7 @@ val springBootStarters = listOf("web"
 
 dependencies {
 
-//    implementation(project(":client"))
+    implementation(project(":client"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
@@ -45,7 +45,6 @@ dependencies {
     implementation("org.liquibase", "liquibase-core", "3.6.2")
     implementation("joda-time", "joda-time", "2.10")
     implementation("org.jetbrains.exposed", "exposed", "0.10.5")
-//    implementation("com.zaxxer", "HikariCP", "2.7.9")
 }
 
 tasks {

@@ -105,7 +105,7 @@ open class TaskController {
     }
 
     @PostMapping("/tasks/{id}/startTiming")
-    fun startTiming(@PathVariable id: Long) = transaction {
+    fun startTiming(@PathVariable id: Long): Unit = transaction {
         stopTiming()
         TimeInterval.insert {
             it[TimeInterval.task] = EntityID(id, Task)
@@ -114,7 +114,7 @@ open class TaskController {
     }
 
     @PostMapping("/tasks/{id}/stopTiming")
-    fun stopTiming() = transaction {
+    fun stopTiming(): Unit = transaction {
         TimeInterval.update({ TimeInterval.end.isNull() }) {
             it[TimeInterval.end] = now()
         }
