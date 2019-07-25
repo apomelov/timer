@@ -23,7 +23,7 @@ class NewTaskDialog extends React.Component {
                 clearInterval(interval);
                 $(self.refs.progress).text("");
                 self.setState({ ...self.state, disabled: false });
-            }, 5000);
+            }, 15000);
         });
     };
 

@@ -50,6 +50,9 @@ module.exports = (env, argv) => {
                 }
             }
         },
+        watchOptions: {
+            ignored: ['files/**/*.js', 'node_modules']
+        },
         module: {
             rules: [
                 { test: /\.js$/,   use: jsLoader, exclude: /node_modules/ },

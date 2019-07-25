@@ -7,6 +7,7 @@ export const STATE_CHANGED = "/notifications/stateChanged";
 export const FIELDS_CHANGED = "/notifications/fieldsChanged";
 export const TASKS_CHANGED = "/notifications/tasksChanged";
 export const SEGMENTS_CHANGED = "/notifications/segmentsChanged";
+export const SETTINGS_CHANGED = "/notifications/settings";
 
 
 /* Sagas */
@@ -16,6 +17,7 @@ function* saga() {
         yield put({ type: FIELDS_CHANGED, payload: state.fields });
         yield put({ type: TASKS_CHANGED, payload: state.tasks });
         yield put({ type: SEGMENTS_CHANGED, payload: state.segments });
+        yield put({ type: SETTINGS_CHANGED, payload: state.settings });
     });
 }
 

@@ -1,10 +1,7 @@
 package fi.apomelov.timer
 
 import fi.apomelov.timer.PatchOp.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime.now
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,12 +13,11 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/fields")
 class TaskFieldsController {
 
-    @Autowired lateinit var database: Database
     @Autowired lateinit var socket: SocketHandler
 
     @PostMapping("/refresh")
     @ResponseStatus(NO_CONTENT)
-    fun getCustomFields() = transaction(database) {
+    fun getCustomFields() = transaction {
         val fields = CustomField.selectAll().map(::CustomFieldTO)
         val patch = Patch(REPLACE, "$.fields", fields)
         socket.sendMessage(patch)
@@ -29,7 +25,7 @@ class TaskFieldsController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(NO_CONTENT)
-    fun deleteCustomField(@PathVariable id: Long) = transaction(database) {
+    fun deleteCustomField(@PathVariable id: Long) = transaction {
         CustomField.deleteWhere { CustomField.id.eq(id) }
         val patch = Patch(REMOVE, "$.fields[?(@.id == $id)]")
         socket.sendMessage(patch)
@@ -152,8 +148,6 @@ class TimeController {
 
     @Autowired lateinit var socket: SocketHandler
 
-    @Autowired lateinit var database: Database
-
     @Autowired lateinit var taskService: TaskService
     @Autowired lateinit var segmentService: TimeSegmentService
 
@@ -173,7 +167,7 @@ class TimeController {
         val patch = arrayListOf(
                 Patch(REPLACE, "$.segments[?(@.id == $id)].taskTitle", taskTitle)
         )
-        transaction(database) {
+        transaction {
             val end = TimeSegment
                     .slice(TimeSegment.id, TimeSegment.end)
                     .select { TimeSegment.id.eq(id) }
@@ -186,5 +180,66 @@ class TimeController {
         }
         socket.sendMessage(patch)
     }
+
+}
+
+data class SettingsTO(
+        val deleteTaskImmediately: Boolean = false,
+        val deleteTimeImmediately: Boolean = false,
+        val jiraLogin: String = "",
+        val jiraAuthHeader: String = ""
+) {
+    constructor(settings: Map<String, ResultRow>): this(
+            deleteTaskImmediately = settings["deleteTaskImmediately"]?.let { it[Settings.booleanValue] } ?: false,
+            deleteTimeImmediately = settings["deleteTimeImmediately"]?.let { it[Settings.booleanValue] } ?: false,
+            jiraLogin = settings["jiraLogin"]?.let { it[Settings.stringValue] } ?: "",
+            jiraAuthHeader = settings["jiraAuthHeader"]?.let { it[Settings.stringValue] } ?: ""
+    )
+}
+
+@RestController
+@RequestMapping("/api/settings")
+class SettingsController {
+
+    @Autowired lateinit var socket: SocketHandler
+    
+    @PostMapping("/refresh")
+    @ResponseStatus(ACCEPTED)
+    fun refreshSettings() = transaction {
+        socket.sendMessage(Settings
+                .selectAll()
+                .associateBy { it[Settings.key] }
+                .let(::SettingsTO)
+                .let { Patch(REPLACE, "$.settings", it) })
+    }
+
+    @PostMapping("/update")
+    @ResponseStatus(ACCEPTED)
+    fun updateSettings(@RequestBody settings: SettingsTO) = transaction {
+        Settings.deleteAll()
+        Settings["deleteTaskImmediately"] = settings.deleteTaskImmediately
+        Settings["deleteTimeImmediately"] = settings.deleteTimeImmediately
+        Settings["jiraLogin"] = settings.jiraLogin
+        Settings["jiraAuthHeader"] = settings.jiraAuthHeader
+        socket.sendMessage(Patch(REPLACE, "$.settings", settings))
+    }
+
+}
+
+
+@RestController
+@RequestMapping("/api/search")
+class SearchController {
+
+    @Autowired
+    lateinit var jiraApi: JiraApi
+
+    @GetMapping
+    fun search(@RequestParam query: String) =
+        jiraApi.search(query).fold({
+            Pair(it.total, if (it.total <= 10) it.issues else it.issues.slice(0..9))
+        }, {
+            throw it
+        })
 
 }

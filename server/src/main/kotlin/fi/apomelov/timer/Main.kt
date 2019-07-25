@@ -1,6 +1,7 @@
 package fi.apomelov.timer
 
 import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializerProvider
@@ -38,9 +39,12 @@ class JacksonMapper : ObjectMapper() {
     lateinit var serializers: List<JsonSerializer<*>>
 
     @PostConstruct
-    fun init() = KotlinModule()
-            .also { m -> serializers.forEach { m.addSerializer(it) } }
-            .let { registerModule(it) }
+    fun init() {
+        val kotlinModule = KotlinModule()
+        serializers.forEach { kotlinModule.addSerializer(it) }
+        registerModule(kotlinModule)
+        configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
+    }
 
 }
 
@@ -69,6 +73,8 @@ fun main(args: Array<String>) {
     SpringApplicationBuilder(ApplicationContext::class.java)
             .headless(false)
             .run(*args)
+
+
 //
 //    try {
 //        setLookAndFeel(getSystemLookAndFeelClassName())
@@ -92,14 +98,6 @@ fun main(args: Array<String>) {
     //.setShortcut('q'); // case does not matter
 }
 
-//sealed class JiraApi : FuelRouting {
-//    override val basePath = "http://jira.leiki.com:8800/Jira/rest/api/2"
-//    override val headers = mapOf("Authorization" to "Basic YWxleGV5OldlbGNvbWVfdG9fT3BlbldheS4=")
-//    override val params = emptyList<Pair<String, String>>()
-//    override val method = GET
-//    override val body = null
-//    override val bytes = null
-//}
 //
 //open class JiraIssueApi : JiraApi() {
 //    override val path = "/issue"
@@ -113,11 +111,3 @@ fun main(args: Array<String>) {
 //
 //}
 //
-//open class JiraSearchApi : JiraApi() {
-//    override val path = "/search"
-//    companion object {
-//        fun search(query: String) = object : JiraSearchApi() {
-//            override val params = super.params + listOf("fields" to "summary", "jql" to "summary ~ \"$query\"")
-//        }
-//    }
-//}

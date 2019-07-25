@@ -1,23 +1,25 @@
-import { combineReducers } from "redux"
-import { fork, all } from "redux-saga/effects"
-import { mapNotNull } from "../utils"
+import {combineReducers} from "redux"
+import {all, fork} from "redux-saga/effects"
+import {mapNotNull} from "../utils"
 
 import api from "./api"
 import fields from "./fields"
+import notifications from "./notifications"
 import segments from "./segments"
+import settings from "./settings"
 import tasks from "./tasks"
 import times from "./times"
-import notifications from "./notifications"
 import websocket from "./websocket"
 
 
 export const modules = {
     api,
     fields,
+    notifications,
     segments,
+    settings,
     tasks,
     times,
-    notifications,
     websocket
 };
 

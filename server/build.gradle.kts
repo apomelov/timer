@@ -3,20 +3,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 
 plugins {
-    kotlin("jvm").version("1.2.71")
-    kotlin("plugin.noarg").version("1.2.71")
+    kotlin("jvm").version("1.3.0")
+    kotlin("plugin.noarg").version("1.3.0")
     application
 }
 
 application {
     applicationName = "timer"
     mainClassName = "fi.apomelov.timer.MainKt"
-}
-
-kotlin {
-    experimental {
-        coroutines = Coroutines.ENABLE
-    }
 }
 
 noArg {
@@ -46,6 +40,10 @@ dependencies {
 
     compile("com.1stleg", "jnativehook", "2.1.0")
     compile("com.dorkbox", "SystemTray", "3.15")
+
+    compile("com.github.kittinunf.fuel", "fuel", "1.15.1")
+    compile("com.github.kittinunf.fuel", "fuel-jackson", "1.15.1")
+
 
 }
 

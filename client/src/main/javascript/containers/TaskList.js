@@ -9,9 +9,19 @@ import Task from "./Task";
 import segments from "../modules/segments";
 import TaskDetailsDialog from "./TaskDetailsDialog";
 import TaskDeleteDialog from "./TaskDeleteDialog";
+import SettingsDialog from "./SettingsDialog";
+import axios from "axios";
 
 
 export const taskContextMenuId = "taskContextMenu";
+
+
+const jiraApi = axios.create({
+    baseURL: "http://jira.leiki.com:8800/Jira/rest/api/2",
+    headers: {
+        "Content-Type": "application/json"
+    }
+});
 
 class TaskList extends React.Component {
 
@@ -63,14 +73,51 @@ class TaskList extends React.Component {
 
     delete = () => {
         const task = $("#" + taskContextMenuId).data("invokedOn");
-        const modal = $("#taskDeleteModal");
-        modal.data("task", task);
-        modal.modal("show");
+        if (this.props.settings.deleteTaskImmediately) {
+            this.props.deleteTask(task);
+        } else {
+            const modal = $("#taskDeleteModal");
+            modal.data("task", task);
+            modal.modal("show");
+        }
+    };
+
+    search = (e) => {
+        const query = $(e.target).val();
+        if (query.length < 4) {
+            return;
+        }
+        const searchUrl = `http://jira.leiki.com:8800/Jira/rest/api/2/search?fields=summary&jql=summary ~ "${query}"`;
+        fetch(encodeURI(searchUrl), {
+            method: "GET",
+            headers: {
+                Authorization: `Basic ${this.props.settings.jiraAuthHeader}`,
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            mode: "no-cors"
+        }).then((response) => {
+            console.log(response.data);
+        });
+        // jiraApi.get("/search", {
+        //     headers: {
+        //         Authorization: `Basic ${this.props.settings.jiraAuthHeader}`,
+        //         Accept: "application/json"
+        //     },
+        //     params: {
+        //         fields: "summary",
+        //         jql: `summary ~ "${query}"`
+        //     }
+        // }).then((response) => {
+        //     console.log(response.data);
+        // });
     };
 
     render = () => {
 
         return <div className={"panel panel-default task-panel"}>
+
+            <SettingsDialog />
 
             <TaskDetailsDialog />
 
@@ -79,8 +126,12 @@ class TaskList extends React.Component {
             <div className="panel-heading">
                 <h3 className="panel-title">Task List</h3>
                 <div className="controls">
+                    <input className="form-control" placeholder="Search Jira" onChange={::this.search} />
                     <button type="button" className="btn btn-default" onClick={::this.onNewTaskDialogOpen}>
                         <span className="glyphicon glyphicon-plus" aria-hidden="true"/> New task
+                    </button>
+                    <button type="button" className="btn btn-default" data-toggle="modal" data-target="#settingsModal">
+                        <span className="glyphicon glyphicon-cog" aria-hidden="true"/>
                     </button>
                     {/*<button type="button" className="btn btn-default">*/}
                         {/*<span className="glyphicon glyphicon-cog" aria-hidden="true"/> Customize fields*/}
@@ -147,13 +198,15 @@ class TaskList extends React.Component {
 export default connect(
     state => ({
         fields: state.fields,
-        tasks: state.tasks
+        tasks: state.tasks,
+        settings: state.settings
     }),
     dispatch => bindActionCreators({
         refreshFields: fields.actions.refreshFields,
         refreshTasks: tasks.actions.refreshTasks,
         closeTask: tasks.actions.closeTask,
         reopenTask: tasks.actions.reopenTask,
+        deleteTask: tasks.actions.deleteTask,
         startTiming: tasks.actions.startTiming,
         stopTiming: tasks.actions.stopTiming,
 
