@@ -1,15 +1,16 @@
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+
 plugins {
     kotlin("jvm").version("1.2.71")
+    kotlin("plugin.noarg").version("1.2.71")
     application
-    id("com.bmuschko.docker-java-application").version("3.6.2")
 }
 
 application {
-    applicationName = "client-server"
-    mainClassName = "template/MainKt"
+    applicationName = "timer"
+    mainClassName = "fi.apomelov.timer.MainKt"
 }
 
 kotlin {
@@ -18,12 +19,18 @@ kotlin {
     }
 }
 
+noArg {
+    annotation("javax.persistence.Entity")
+}
+
 val springBootVersion = "2.0.5.RELEASE"
-val springBootStarters = listOf("web")
+val springBootStarters = listOf("web"
+        , "jdbc"
+)
 
 dependencies {
 
-    implementation(project(":client"))
+//    implementation(project(":client"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
@@ -34,6 +41,11 @@ dependencies {
 
     implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.9.6")
 
+    implementation("com.h2database", "h2", "1.4.197")
+    implementation("org.liquibase", "liquibase-core", "3.6.2")
+    implementation("joda-time", "joda-time", "2.10")
+    implementation("org.jetbrains.exposed", "exposed", "0.10.5")
+//    implementation("com.zaxxer", "HikariCP", "2.7.9")
 }
 
 tasks {

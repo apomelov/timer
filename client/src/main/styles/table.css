@@ -1,0 +1,41 @@
+table.task-table > thead > tr > th {
+    width: 1px;
+}
+table.task-table > thead > tr > th:nth-child(1) {
+    width: 60%;
+}
+table.task-table > thead > tr > th:nth-child(2) {
+    width: 80px;
+}
+
+table.task-table > thead > tr > th:last-child {
+    width: auto;
+}
+
+table.task-table > thead > tr > th,
+table.task-table > tbody > tr > td,
+table.interval-table > tbody > tr > td {
+    white-space: nowrap;
+}
+
+table.task-table > tbody > tr.task-closed > td {
+    text-decoration: line-through;
+}
+
+table.interval-table > thead > tr > th:nth-child(1) {
+    width: 60%;
+}
+table.interval-table > thead > tr > th:nth-child(2) {
+    width: 20%;
+}
+table.interval-table > thead > tr > th:nth-child(3) {
+    width: 20%;
+}
+table.interval-table > tbody > tr > td:nth-child(1) {
+    padding-left: 29px;
+}
+
+table.task-table > tbody > tr.row-active,
+table.interval-table > tbody > tr.row-active {
+    background-color: #dfd;
+}

@@ -1,0 +1,110 @@
+<?xml version="1.1" encoding="utf-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd
+        ">
+
+    <changeSet id="1" author="apomelov">
+        <createTable tableName="task">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="title" type="nvarchar(1024)">
+                <constraints nullable="false" />
+            </column>
+            <column name="closed_at" type="datetime" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="apomelov">
+        <createTable tableName="task_field">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="title" type="nvarchar(1024)">
+                <constraints nullable="false" />
+            </column>
+            <column name="match" type="nvarchar(1024)" />
+            <column name="replace" type="nvarchar(1024)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="apomelov">
+        <createTable tableName="task_field_value">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="task" type="int">
+                <constraints referencedTableName="task" referencedColumnNames="id" foreignKeyName="fk_value_task" deleteCascade="true" />
+            </column>
+            <column name="field" type="int">
+                <constraints referencedTableName="task_field" referencedColumnNames="id" foreignKeyName="fk_value_field" deleteCascade="true" />
+            </column>
+            <column name="value" type="nvarchar(1024)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="apomelov">
+        <createIndex tableName="task_field_value" indexName="idx_field_value_by_task">
+            <column name="task" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="6" author="apomelov">
+        <createIndex tableName="task_field_value" indexName="idx_field_value_by_field">
+            <column name="field" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="7" author="apomelov">
+        <createTable tableName="time_interval">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="task" type="int">
+                <constraints referencedTableName="task" referencedColumnNames="id" foreignKeyName="fk_interval_task" deleteCascade="true" />
+            </column>
+            <column name="start" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="end" type="datetime" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="8" author="apomelov">
+        <createIndex tableName="time_interval" indexName="idx_time_interval_by_task">
+            <column name="task" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="9" author="apomelov">
+        <createIndex tableName="time_interval" indexName="idx_time_interval_by_start">
+            <column name="start" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="99" author="apomelov">
+        <sql>
+            insert into task(title) values('Opened task');
+            insert into task(title, closed_at) values('Closed recently', timestampadd('DAY', -3, now()));
+            insert into task(title, closed_at) values('Closed long ago', timestampadd('DAY', -10, now()));
+            insert into task(title) values('Task without custom fields');
+
+            insert into task_field(title) values('Jira key');
+            insert into task_field(title) values('Comment');
+
+            insert into task_field_value(task, value, field) values(1, 'TASK-1', 1);
+
+            insert into task_field_value(task, value, field) values(2, 'TASK-2', 1);
+            insert into task_field_value(task, value, field) values(2, 'Some comment!', 2);
+
+            insert into task_field_value(task, value, field) values(3, 'TASK-3', 1);
+
+            insert into time_interval(task, start, end) values(1, timestampadd('HOUR', -2, now()), timestampadd('HOUR', -1, now()));
+            insert into time_interval(task, start) values(1, timestampadd('MINUTE', -30, now()));
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

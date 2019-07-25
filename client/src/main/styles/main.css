@@ -1,3 +1,11 @@
+html, body, #root, div.app {
+    height: 100%
+}
+
+div.app {
+    padding: 20px
+}
+
 .loader {
     border: 5px solid #f3f3f3;
     border-top: 5px solid #3498db;

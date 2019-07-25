@@ -1,19 +1,29 @@
 server:
   port: 8080
-#spring:
-#  liquibase:
-#    change-log: classpath:/db/changelog/db.changelog-master.xml
-#  datasource:
-#    driver-class-name: org.postgresql.Driver
-#    username: postgres
-#    password: postgres
-#    url: jdbc:postgresql://localhost:5432/postgres
-#  jpa:
-#    properties.hibernate:
-#      # Disable feature detection by this undocumented parameter.
-#      #Check the org.hibernate.engine.jdbc.internal.JdbcServiceImpl.configure method for more details.
-#      temp.use_jdbc_metadata_defaults: false
-#      format_sql: true
-#    # Because detection is disabled you have to set correct dialect by hand.
-#    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
-#    show-sql: true
+spring:
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+  datasource:
+#    driver-class-name: org.apache.derby.jdbc.EmbeddedDriver
+#    username: sa
+#    password: sa
+#    url: jdbc:derby:memory:myDb;create=true
+#    driver-class-name: org.hsqldb.jdbc.JDBCDriver
+#    username: SA
+#    password:
+#    url: jdbc:hsqldb:file:db/testdb;shutdown=true
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1
+#    url: jdbc:h2:./db/testdb
+  jpa:
+    properties.hibernate:
+      # Disable feature detection by this undocumented parameter.
+      #Check the org.hibernate.engine.jdbc.internal.JdbcServiceImpl.configure method for more details.
+      temp.use_jdbc_metadata_defaults: false
+      format_sql: true
+    # Because detection is disabled you have to set correct dialect by hand.
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+

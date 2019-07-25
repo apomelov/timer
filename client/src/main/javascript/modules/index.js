@@ -1,13 +1,15 @@
 import { combineReducers } from "redux"
 import { fork, all } from "redux-saga/effects"
-import { mapNotNull } from "../utils";
+import { mapNotNull } from "../utils"
 
 import api from "./api"
-import data from "./data"
+import tasks from "./tasks"
+import times from "./times"
 
 export const modules = {
     api,
-    data,
+    tasks,
+    times
 };
 
 export const rootReducer = combineReducers(
@@ -16,6 +18,6 @@ export const rootReducer = combineReducers(
 
 export function* rootSaga() {
     yield all(Object.values(
-        mapNotNull(modules, module => fork(module.saga))
+        mapNotNull(mapNotNull(modules, module => module.saga), saga => fork(saga))
     ));
 }

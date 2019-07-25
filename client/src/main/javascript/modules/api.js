@@ -1,5 +1,5 @@
 import {call, put, takeEvery} from "redux-saga/effects"
-import {retrocycle} from "../utils";
+import {retrocycle} from "../utils"
 import axios from "axios"
 
 
@@ -61,7 +61,7 @@ function* apiCallWorker({payload}) {
         yield put({type: success, payload: result});
     } catch (error) {
         if (!failure) {
-            throw error;
+            console.error(error);
         } else {
             yield put({type: failure, payload: error});
         }
