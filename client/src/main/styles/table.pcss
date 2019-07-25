@@ -41,14 +41,19 @@ div.application-panel {
                 }
                 &:nth-child(odd) { background-color: #f9f9f9; }
                 &:nth-child(even) { background-color: #fff; }
+
                 &.active { background-color: #ddffdd; }
                 &.closed { text-decoration: line-through black solid; }
+
                 > div {
                     padding: 10px;
                     flex-shrink: 0;
                     flex-basis: 0;
                     white-space: nowrap;
                     overflow: hidden;
+                    &:nth-child(1) { flex-grow: 5; }
+                    &:nth-child(2) { flex-grow: 1; }
+                    &:nth-child(3) { flex-grow: 4; }
                 }
             }
 
@@ -57,11 +62,7 @@ div.application-panel {
         &.task-panel {
             flex-grow: 6;
             > div.panel-body > div.panel-row > div {
-                &:nth-child(1) { flex-grow: 5; }
-                &:nth-child(2) { flex-grow: 1; }
-                &:nth-child(3) { flex-grow: 4; }
-                &:nth-child(3) {
-                    padding: 10px;
+                &:last-child {
                     display: flex;
                     > div {
                         flex-grow: 1;
@@ -80,11 +81,6 @@ div.application-panel {
 
         &.intervals-panel {
             flex-grow: 4;
-            > div.panel-body > div.panel-row {
-                > div:nth-child(1) { flex-grow: 5; }
-                > div:nth-child(2) { flex-grow: 1; }
-                > div:nth-child(3) { flex-grow: 4; }
-            }
         }
 
     }
