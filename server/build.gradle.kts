@@ -28,7 +28,7 @@ val springBootStarters = listOf("jdbc", "web", "websocket")
 
 dependencies {
 
-    implementation(project(":client"))
+//    implementation(project(":client"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
@@ -45,7 +45,7 @@ dependencies {
     implementation("org.jetbrains.exposed", "exposed", "0.10.5")
 
     implementation("com.1stleg", "jnativehook", "2.1.0")
-
+    implementation("com.dorkbox", "SystemTray", "3.15")
 }
 
 tasks {

@@ -1,54 +1,26 @@
-import ReconnectingWebSocket from "reconnecting-websocket";
-import {call, fork, put, take, takeLatest} from "redux-saga/effects";
-import tasks from "./tasks";
-import {eventChannel} from "redux-saga";
-
-
-const socketUrl = window.location.protocol.replace("http", "ws")
-    + "/" + window.location.host
-    + "/socket";
-
-const ws = new ReconnectingWebSocket(socketUrl);
-
-const initWebSocket = () => eventChannel(emitter => {
-    ws.onmessage = () => {
-        return emitter({ type: NOTIFICATION_RECEIVED });
-    };
-    return () => console.log('Socket off');
-});
+import {put, takeEvery, select} from "redux-saga/effects";
+import {applyPatch} from "../utils";
 
 
 /* Action types */
-const NOTIFICATION_RECEIVED = "/notifications/received";
-
-
-/* Action creators */
-const actions = {
-
-};
+export const STATE_CHANGED = "/notifications/stateChanged";
+export const FIELDS_CHANGED = "/notifications/fieldsChanged";
+export const TASKS_CHANGED = "/notifications/tasksChanged";
+export const SEGMENTS_CHANGED = "/notifications/segmentsChanged";
 
 
 /* Sagas */
 function* saga() {
-
-    yield fork(watchIncomingMessages);
-
-    yield takeLatest(NOTIFICATION_RECEIVED, function* () {
-        yield put(tasks.actions.loadTasks())
+    yield takeEvery(STATE_CHANGED, function* ({_, payload}) {
+        const state = applyPatch(yield select(state => state), payload);
+        yield put({ type: FIELDS_CHANGED, payload: state.fields });
+        yield put({ type: TASKS_CHANGED, payload: state.tasks });
+        yield put({ type: SEGMENTS_CHANGED, payload: state.segments });
     });
-}
-
-function* watchIncomingMessages() {
-    const channel = yield call(initWebSocket);
-    while (true) {
-        const action = yield take(channel);
-        yield put(action)
-    }
 }
 
 
 /* Exports */
 export default {
-    actions,
     saga
 }

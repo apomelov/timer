@@ -23,8 +23,8 @@ class Length extends React.Component {
     }
 
     render() {
-        const start = this.props.interval.start;
-        const end = Math.max(start, this.props.interval.end || this.props.now);
+        const start = this.props.segment.start;
+        const end = Math.max(start, this.props.segment.end || this.props.now);
         return formatDuration(start, end);
     }
 

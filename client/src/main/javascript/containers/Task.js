@@ -4,7 +4,7 @@ import {DropTarget} from "react-dnd";
 
 const squareTarget = {
     drop(props, monitor) {
-        props.moveInterval(monitor.getItem().intervalId);
+        props.moveSegment(monitor.getItem().segmentId);
     }
 };
 
@@ -22,7 +22,7 @@ class Task extends React.Component {
     }
 
     render = () => {
-        const { task, customFields, onCheck, onDoubleClick, connectDropTarget, isOver } = this.props;
+        const { task, fields, onCheck, onDoubleClick, connectDropTarget, isOver } = this.props;
         let cls = "panel-row task";
         if (task.closedAt) cls += " closed";
         if (task.active) cls += " active";
@@ -37,8 +37,8 @@ class Task extends React.Component {
             <div>999:59:59</div>
             <div>
                 {
-                    customFields.map(field => {
-                        const value = task.customFields[`${field.id}`] || "";
+                    fields.map(field => {
+                        const value = task.fields && task.fields[`${field.id}`] || "";
                         return <div key={field.id} data-toggle="tooltip" data-placement="top" title={value}>{value}</div>;
                     })
                 }

@@ -1,95 +1,164 @@
 package fi.apomelov.timer
 
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
+import fi.apomelov.timer.PatchOp.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.joda.time.DateTime
 import org.joda.time.DateTime.now
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus.*
 import org.springframework.web.bind.annotation.*
 
 
 @RestController
-@RequestMapping("/api")
-annotation class ApiController
-
-
-@ApiController
+@RequestMapping("/api/fields")
 class TaskFieldsController {
 
-    @GetMapping("/customFields")
-    fun getCustomFields() = transaction {
-        CustomField.selectAll().map(::CustomFieldTO)
+    @Autowired lateinit var database: Database
+    @Autowired lateinit var socket: SocketHandler
+
+    @PostMapping("/refresh")
+    @ResponseStatus(NO_CONTENT)
+    fun getCustomFields() = transaction(database) {
+        val fields = CustomField.selectAll().map(::CustomFieldTO)
+        val patch = Patch(REPLACE, "$.fields", fields)
+        socket.sendMessage(patch)
     }
 
-    @DeleteMapping("/customFields/{id}")
-    fun deleteCustomField(@PathVariable id: Long) = transaction {
+    @DeleteMapping("/{id}")
+    @ResponseStatus(NO_CONTENT)
+    fun deleteCustomField(@PathVariable id: Long) = transaction(database) {
         CustomField.deleteWhere { CustomField.id.eq(id) }
+        val patch = Patch(REMOVE, "$.fields[?(@.id == $id)]")
+        socket.sendMessage(patch)
     }
 
 }
 
-@ApiController
+
+@RestController
+@RequestMapping("/api/tasks")
+open class TasksController {
+
+    @Autowired lateinit var socket: SocketHandler
+
+    @Autowired lateinit var taskService: TaskService
+
+    @PostMapping("/refresh")
+    @ResponseStatus(ACCEPTED)
+    fun refreshTasks() {
+        val tasks = taskService.getTasks()
+        val patch = Patch(REPLACE, "$.tasks", tasks)
+        socket.sendMessage(patch)
+    }
+
+    @PostMapping
+    @ResponseStatus(CREATED)
+    fun createTask(@RequestBody task: NewTaskTO) {
+        val newTask = taskService.createTask(task.title, task.fields)
+        val patch = Patch(ADD, "$.tasks.0", newTask)
+        socket.sendMessage(patch)
+    }
+
+}
+
+
+@RestController
+@RequestMapping("/api/tasks/{id}")
 open class TaskController {
 
-    @Autowired
-    lateinit var taskService: TaskService
+    @Autowired lateinit var socket: SocketHandler
 
-    @Autowired
-    lateinit var timeSegmentService: TimeSegmentService
+    @Autowired lateinit var taskService: TaskService
+    @Autowired lateinit var segmentsService: TimeSegmentService
 
-    @GetMapping("/tasks")
-    fun getTasks() = taskService.getTasks()
-
-    @GetMapping("/allTasks")
-    fun getAllTasks() = taskService.getAllTasks()
-
-    @PostMapping("/tasks/{id}/close")
-    fun closeTask(@PathVariable id: Long) = transaction {
-        taskService.closeTask(id)
-        taskService.getTask(id)
+    @PostMapping("/close")
+    @ResponseStatus(ACCEPTED)
+    fun closeTask(@PathVariable id: Long) {
+        val closedAt = taskService.closeTask(id)
+        val patch = Patch(REPLACE, "$.tasks[?(@.id == $id)].closedAt", closedAt)
+        socket.sendMessage(patch)
     }
 
-    @PostMapping("/tasks/{id}/reopen")
-    fun reopenTask(@PathVariable id: Long) = transaction {
+    @PostMapping("/reopen")
+    @ResponseStatus(ACCEPTED)
+    fun reopenTask(@PathVariable id: Long) {
         taskService.reopenTask(id)
-        taskService.getTask(id)
+        val patch = Patch(REMOVE, "$.tasks[?(@.id == $id)].closedAt")
+        socket.sendMessage(patch)
     }
 
-    @PostMapping("/tasks/{id}/startTiming")
+    @PostMapping("/start")
+    @ResponseStatus(ACCEPTED)
     fun startTiming(@PathVariable id: Long): Unit = transaction {
-        timeSegmentService.stopTiming()
-        timeSegmentService.startTiming(id)
+        val now = now()
+        val newSegment = segmentsService.startTiming(id)
+        val patch = listOf(
+                Patch(REPLACE, "$.tasks[?(@.active)].active", false),
+                Patch(REPLACE, "$.tasks[?(@.id == $id)].active", true),
+                Patch(REPLACE, "$.segments[?(@.end == null)].end", now.millis),
+                Patch(ADD, "$.segments.0", newSegment)
+        )
+        socket.sendMessage(patch)
     }
 
-    @PostMapping("/tasks/{id}/stopTiming")
-    fun stopTiming(): Unit = transaction {
-        timeSegmentService.stopTiming()
+    @PostMapping("/stop")
+    @ResponseStatus(ACCEPTED)
+    fun stopTiming() {
+        val end = segmentsService.stopTiming()
+        val patch = listOf(
+                Patch(REPLACE, "$.tasks[?(@.active)].active", false),
+                Patch(REPLACE, "$.segments[?(@.end == null)].end", end.millis)
+        )
+        socket.sendMessage(patch)
     }
 
 }
 
-@ApiController
+
+data class Interval(val start: Long, val end: Long)
+
+@RestController
+@RequestMapping("/api/segments")
 class TimeController {
 
-    @Autowired
-    lateinit var timeSegmentService: TimeSegmentService
+    @Autowired lateinit var socket: SocketHandler
 
-    @GetMapping("/timeSegments")
-    fun getSegments(@RequestParam start: Long,
-                     @RequestParam end: Long,
-                     @RequestParam(required = false) task: Long?) = timeSegmentService.getTimeSegments {
+    @Autowired lateinit var database: Database
 
-        select {  TimeSegment.start.between(DateTime(start), DateTime(end)) }
-                .also { q ->
-                    if (task != null) {
-                        q.andWhere { TimeSegment.task.eq(task) }
-                    }
-                }
+    @Autowired lateinit var taskService: TaskService
+    @Autowired lateinit var segmentService: TimeSegmentService
+
+    @PostMapping("/refresh")
+    @ResponseStatus(ACCEPTED)
+    fun refreshSegments(@RequestBody interval: Interval) {
+        val segments = segmentService.getSegments(interval.start, interval.end)
+        val patch = Patch(REPLACE, "$.segments", segments)
+        socket.sendMessage(patch)
     }
 
-    @PostMapping("/timeSegments/{id}/move")
-    fun moveSegment(@PathVariable id: Long, @RequestBody task: Long) = timeSegmentService.move(id, task)
+    @PostMapping("/{id}/move")
+    @ResponseStatus(ACCEPTED)
+    fun moveSegment(@PathVariable id: Long, @RequestBody task: Long) {
+        segmentService.move(id, task)
+        val taskTitle = taskService.getTask(task)?.title
+        val patch = arrayListOf(
+                Patch(REPLACE, "$.segments[?(@.id == $id)].taskTitle", taskTitle)
+        )
+        transaction(database) {
+            val end = TimeSegment
+                    .slice(TimeSegment.id, TimeSegment.end)
+                    .select { TimeSegment.id.eq(id) }
+                    .first()[TimeSegment.end]
+
+            if (end == null) {
+                patch.add(Patch(REPLACE, "$.tasks[?(@.active)].active", false))
+                patch.add(Patch(REPLACE, "$.tasks[?(@.id == $task)].active", true))
+            }
+        }
+        socket.sendMessage(patch)
+    }
 
 }

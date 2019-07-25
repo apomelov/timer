@@ -1,7 +1,15 @@
+div.application {
+    display: flex;
+    justify-content: space-around;
+    height: 100%;
+}
+
 div.application-panel {
     height: 100%;
     display: flex;
     flex-flow: column;
+    width: 800px;
+    max-width: 800px;
 
     > div.panel {
         height: 100%;
@@ -61,6 +69,17 @@ div.application-panel {
 
         &.task-panel {
             flex-grow: 6;
+            > div.panel-heading {
+                justify-content: space-between;
+                > div.controls {
+                    display: flex;
+                    > button {
+                        margin: 0 5px;
+                        padding-bottom: 3px;
+                    }
+                }
+            }
+
             > div.panel-body > div.panel-row {
                 &.aimed {
                     background-color: #ffd;

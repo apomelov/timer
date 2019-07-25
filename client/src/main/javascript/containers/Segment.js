@@ -6,7 +6,7 @@ import {DragSource} from "react-dnd";
 
 const timeSegmentSource = {
     beginDrag(props) {
-        return { intervalId: props.interval.id };
+        return { segmentId: props.segment.id };
     },
 };
 
@@ -17,23 +17,23 @@ function collect(connect, monitor) {
     }
 }
 
-class Interval extends React.Component {
+class Segment extends React.Component {
 
     constructor(props) {
         super(props);
     }
 
     render = () => {
-        const { interval, connectDragSource, isDragging } = this.props;
+        const { segment, connectDragSource, isDragging } = this.props;
         let cls = "panel-row interval";
-        if (!interval.end) cls += " active";
+        if (!segment.end) cls += " active";
         if (isDragging) cls += " dragging";
         return connectDragSource(<div className={cls}>
-            <div>{interval.taskTitle}</div>
-            <div><Length interval={interval} /></div>
-            <div>{moment(interval.start).format("MMM DD YYYY, h:mm:ss")}</div>
+            <div>{segment.taskTitle}</div>
+            <div><Length segment={segment} /></div>
+            <div>{moment(segment.start).format("MMM DD YYYY, HH:mm:ss")}</div>
         </div>);
     }
 }
 
-export default DragSource("timeSegment", timeSegmentSource, collect)(Interval);
+export default DragSource("timeSegment", timeSegmentSource, collect)(Segment);

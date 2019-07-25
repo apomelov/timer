@@ -1,17 +1,19 @@
 import {connect} from "react-redux"
 import TaskList from "./TaskList"
-import IntervalList from "./IntervalList"
-import HTML5Backend from "react-dnd-html5-backend";
-import {DragDropContext} from "react-dnd";
+import SegmentList from "./SegmentList"
+import HTML5Backend from "react-dnd-html5-backend"
+import {DragDropContext} from "react-dnd"
+
 
 class App extends React.Component {
 
-    render = () => {
-        return <div className="application-panel">
-            <TaskList />
-            <IntervalList />
+    render = () =>
+        <div className="application">
+            <div className="application-panel">
+                <TaskList />
+                <SegmentList />
+            </div>
         </div>;
-    };
 
 }
 

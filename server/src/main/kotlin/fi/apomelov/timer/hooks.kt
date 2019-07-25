@@ -27,7 +27,7 @@ import javax.swing.*
 import javax.swing.BorderFactory.createLineBorder
 import javax.swing.BorderFactory.createTitledBorder
 
-const val activityThreshold = 10000L
+const val activityThreshold = 600000L
 
 
 val semaphore = Semaphore(1)
@@ -121,7 +121,7 @@ class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, Nati
     @Autowired lateinit var database: Database
     @Autowired lateinit var timeSegmentService: TimeSegmentService
     @Autowired lateinit var taskService: TaskService
-    @Autowired lateinit var notificator: Notificator
+    @Autowired lateinit var socketHandler: SocketHandler
 
 
     override fun nativeMousePressed(e: NativeMouseEvent) = processEvent()
@@ -162,7 +162,7 @@ class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, Nati
                     lastActivity = curr
                 } finally {
                     semaphore.release()
-                    notificator.notifyRefreshAll()
+//                    socketHandler.notifyRefreshAll("{ }")
                 }
 //                WelcomeBackDialog()
             }

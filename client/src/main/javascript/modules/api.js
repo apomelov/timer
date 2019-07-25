@@ -1,6 +1,7 @@
-import {call, put, takeEvery} from "redux-saga/effects"
+import {call, put, take, takeEvery, race} from "redux-saga/effects"
 import {retrocycle} from "../utils"
 import axios from "axios"
+import {SOCKET_OPENED} from "./websocket";
 
 
 /* Action types */
@@ -18,20 +19,33 @@ const callApi = (url, method, data, success, failure) => ({
 });
 
 
-/* Reducers */
-// No reducers here
-
-
 /* Sagas */
 function* saga() {
-    yield takeEvery(REST_API_CALL, apiCallWorker)
+    const apiCalls = [];
+    while (true) {
+        const { api } = yield race({
+            socket: take(SOCKET_OPENED),
+            api: take(REST_API_CALL)
+        });
+        if (api) {
+            apiCalls.push(api)
+        } else {
+            break;
+        }
+    }
+    yield takeEvery(REST_API_CALL, apiCallWorker);
+    for (let i in apiCalls) {
+        yield call(apiCallWorker, apiCalls[i]);
+    }
 }
 
 
 /* Export */
 export default {
     actions: {
-        callApi
+        callApi,
+        get: (url, data, success, failure) => callApi(url, "GET", data, success, failure),
+        post: (url, data, success, failure) => callApi(url, "POST", data, success, failure)
     },
     saga
 }
@@ -58,12 +72,14 @@ function* apiCallWorker({payload}) {
     const {api, success, failure} = payload;
     try {
         const result = yield call(apiCall, api);
-        yield put({type: success, payload: result});
+        if (success) {
+            yield put({type: success, payload: result});
+        }
     } catch (error) {
-        if (!failure) {
-            console.error(error);
-        } else {
+        if (failure) {
             yield put({type: failure, payload: error});
+        } else {
+            console.error(error);
         }
     }
 }

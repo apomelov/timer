@@ -7,7 +7,6 @@ import org.joda.time.DateTime
 import org.joda.time.DateTime.now
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.lang.RuntimeException
 
 
 data class CustomFieldTO(val id: Long, val title: String, val match: String?, val replace: String?) {
@@ -15,7 +14,9 @@ data class CustomFieldTO(val id: Long, val title: String, val match: String?, va
             this(rr[CustomField.id].value, rr[CustomField.title], rr[CustomField.match], rr[CustomField.replace])
 }
 
-data class TaskTO(val id: Long, val title: String, val closedAt: DateTime?, val active: Boolean, val customFields: MutableMap<Long, String?>) {
+data class NewTaskTO(val title: String, val fields: Map<Long, String?>)
+
+data class TaskTO(val id: Long, val title: String, val closedAt: DateTime? = null, val active: Boolean = false, val fields: MutableMap<Long, String?> = hashMapOf()) {
     constructor(rr: ResultRow):
             this(rr[Task.id].value, rr[Task.title], rr[Task.closedAt], rr[TimeSegment.id] != null, hashMapOf())
 }
@@ -42,7 +43,7 @@ class TaskService {
                 TaskTO(fields.first()).also { task ->
                     fields.filter { it[CustomFieldValue.id] != null }
                             .forEach {
-                                task.customFields[it[CustomFieldValue.field].value] = it[CustomFieldValue.value]
+                                task.fields[it[CustomFieldValue.field].value] = it[CustomFieldValue.value]
                             }
                 }
             }
@@ -62,9 +63,11 @@ class TaskService {
     }
 
     fun closeTask(id: Long) = transaction(database) {
+        val now = now()
         Task.update({ Task.id.eq(id) }) {
-            it[Task.closedAt] = now()
+            it[Task.closedAt] = now
         }
+        now
     }
 
     fun reopenTask(id: Long) = transaction(database) {
@@ -73,7 +76,7 @@ class TaskService {
         }
     }
 
-    fun createTask(title: String, customFields: Map<Long, String>): TaskTO = transaction(database) {
+    fun createTask(title: String, customFields: Map<Long, String?>): TaskTO = transaction(database) {
 
         val taskId = Task.insertAndGetId {
             it[Task.title] = title
@@ -98,11 +101,14 @@ class TimeSegmentService {
     @Autowired
     lateinit var database: Database
 
-    fun getTimeSegments(select: FieldSet.() -> Query = FieldSet::selectAll) = transaction(database) {
+    fun getSegments(start: Long, end: Long, task: Long? = null) = transaction(database) {
         TimeSegment
                 .join(Task, JoinType.LEFT, TimeSegment.task, Task.id)
                 .slice(TimeSegment.id, Task.title, TimeSegment.start, TimeSegment.end)
-                .select()
+                .select { TimeSegment.start.between(DateTime(start), DateTime(end)) }
+                .apply {
+                    task?.let { andWhere { TimeSegment.task.eq(it) } }
+                }
                 .orderBy(TimeSegment.start, false)
                 .map(::TimeSegmentTO)
     }
@@ -111,22 +117,40 @@ class TimeSegmentService {
         TimeSegment.update({ TimeSegment.end.isNull() }) {
             it[TimeSegment.end] = at
         }
+        at
     }
 
     fun startTiming(taskId: Long, at: DateTime = now()) = transaction(database) {
-        if (TimeSegment.select { TimeSegment.end.isNull() }.count() > 0) {
-            throw RuntimeException("There are unstopped timings")
-        }
-        TimeSegment.insert {
+        stopTiming(at)
+        val newId = TimeSegment.insertAndGetId {
             it[TimeSegment.task] = EntityID(taskId, Task)
             it[TimeSegment.start] = at
         }
+        TimeSegment
+                .join(Task, JoinType.LEFT, TimeSegment.task, Task.id)
+                .slice(TimeSegment.id, Task.title, TimeSegment.start, TimeSegment.end)
+                .select { TimeSegment.id.eq(newId) }
+                .map(::TimeSegmentTO)
+                .first()
     }
 
     fun move(segmentId: Long, targetTaskId: Long) = transaction(database) {
         TimeSegment.update({ TimeSegment.id.eq(segmentId) }) {
             it[TimeSegment.task] = EntityID(targetTaskId, Task)
         }
+    }
+
+}
+
+
+@Component
+class FieldsService {
+
+    @Autowired
+    lateinit var database: Database
+
+    fun getFields() = transaction(database) {
+        CustomField.selectAll().map(::CustomFieldTO)
     }
 
 }

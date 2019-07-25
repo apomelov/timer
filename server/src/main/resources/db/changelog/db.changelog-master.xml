@@ -123,6 +123,7 @@
             insert into task(title) values('Daily meetings');
             insert into task(title, closed_at) values('Closed recently', timestampadd('DAY', -3, now()));
             insert into task(title) values('Focus refactoring');
+            insert into task(title) values('No additional fields');
 
             insert into custom_field(title) values('Comment');
 

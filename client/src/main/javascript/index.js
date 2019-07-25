@@ -1,7 +1,6 @@
 import "bootstrap"
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap/dist/css/bootstrap-theme.min.css"
-
 import "../styles/main.css"
 
 import { render }                                from "react-dom"
@@ -28,6 +27,11 @@ function initStore() {
 
     return store;
 }
+
+String.prototype.replaceAll = function(search, replacement) {
+    return this.split(search).join(replacement);
+};
+
 
 render(
     <Provider store={initStore()}>

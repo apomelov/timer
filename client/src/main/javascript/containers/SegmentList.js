@@ -4,13 +4,17 @@ import {bindActionCreators} from "redux"
 import "react-datepicker/dist/react-datepicker.css"
 import "../../styles/datepicker.pcss"
 
-import times from "../modules/times"
-import Interval from "./Interval";
+import segments from "../modules/segments"
+import Segment from "./Segment";
 import RangePicker from "./RangePicker";
 
-class IntervalList extends React.Component {
 
-    componentDidMount = () => this.props.loadIntervals();
+class SegmentList extends React.Component {
+
+    componentDidMount = () => {
+        const { refreshSegments, start, end} = this.props;
+        refreshSegments(start, end);
+    };
 
     render = () => <div className={"panel panel-default intervals-panel"}>
         <div className="panel-heading">
@@ -23,8 +27,8 @@ class IntervalList extends React.Component {
                 <div>Start</div>
             </div>
             {
-                this.props.intervals.map(interval =>
-                    <Interval key={interval.id} interval={interval}/>
+                this.props.segments.map(segment =>
+                    <Segment key={segment.id} segment={segment} />
                 )
             }
         </div>
@@ -35,9 +39,11 @@ class IntervalList extends React.Component {
 
 export default connect(
     (state) => ({
-        intervals: state.times.intervals
+        segments: state.segments,
+        start: state.times.start,
+        end: state.times.end
     }),
     (dispatch) => bindActionCreators({
-        loadIntervals: times.actions.loadIntervals
+        refreshSegments: segments.actions.refreshSegments
     }, dispatch)
-)(IntervalList);
+)(SegmentList);
