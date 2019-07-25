@@ -111,7 +111,7 @@ class WelcomeBackDialog : JDialog(null as Frame?, "Welcome back to your computer
 }
 
 
-@Component
+//@Component
 @DependsOn("liquibase")
 class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, NativeKeyListener {
 

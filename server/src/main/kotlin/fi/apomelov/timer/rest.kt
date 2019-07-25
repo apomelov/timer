@@ -86,7 +86,15 @@ open class TaskController {
     @ResponseStatus(ACCEPTED)
     fun reopenTask(@PathVariable id: Long) {
         taskService.reopenTask(id)
-        val patch = Patch(REMOVE, "$.tasks[?(@.id == $id)].closedAt")
+        val patch = Patch(REPLACE, "$.tasks[?(@.id == $id)].closedAt", null)
+        socket.sendMessage(patch)
+    }
+
+    @PostMapping("/update")
+    @ResponseStatus(ACCEPTED)
+    fun updateTask(@PathVariable id: Long, @RequestBody task: NewTaskTO) {
+        val modifiedTask = taskService.updateTask(id, task.title, task.fields)
+        val patch = Patch(REPLACE, "$.tasks[?(@.id == $id)]", modifiedTask)
         socket.sendMessage(patch)
     }
 
@@ -112,6 +120,24 @@ open class TaskController {
                 Patch(REPLACE, "$.tasks[?(@.active)].active", false),
                 Patch(REPLACE, "$.segments[?(@.end == null)].end", end.millis)
         )
+        socket.sendMessage(patch)
+    }
+
+    @PostMapping("/delete")
+    @ResponseStatus(ACCEPTED)
+    fun delete(@PathVariable id: Long): Unit = transaction {
+        val removeSegments = TimeSegment
+                .slice(TimeSegment.id)
+                .select { TimeSegment.task.eq(id) }
+                .map { it[TimeSegment.id].value }
+                .map { Patch(REMOVE, "$.segments[?(@.id == $it)]") }
+
+        taskService.deleteTask(id)
+
+        val patch = listOf(
+                Patch(REMOVE, "$.tasks[?(@.id == $id)]")
+        ) + removeSegments
+
         socket.sendMessage(patch)
     }
 

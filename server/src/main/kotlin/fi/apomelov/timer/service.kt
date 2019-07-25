@@ -78,6 +78,10 @@ class TaskService {
 
     fun createTask(title: String, customFields: Map<Long, String?>): TaskTO = transaction(database) {
 
+        if (title.isBlank()) {
+            throw IllegalArgumentException("Task title shouldn't be empty")
+        }
+
         val taskId = Task.insertAndGetId {
             it[Task.title] = title
         }
@@ -91,6 +95,32 @@ class TaskService {
         }
 
         getTask(taskId.value) ?: throw RuntimeException("Just created task has been lost...")
+    }
+
+    fun updateTask(taskId: Long, title: String, customFields: Map<Long, String?>): TaskTO = transaction(database) {
+
+        if (title.isNotBlank()) {
+            Task.update({ Task.id.eq(taskId) }) {
+                it[Task.title] = title
+            }
+        }
+
+        CustomFieldValue.deleteWhere { CustomFieldValue.task.eq(taskId) }
+
+        val customFieldsToInsert = CustomField.selectAll().filterNot { customFields[it[CustomField.id].value].isNullOrEmpty() }
+
+        CustomFieldValue.batchInsert(customFieldsToInsert) { field ->
+            this[CustomFieldValue.task] = EntityID(taskId, Task)
+            this[CustomFieldValue.field] = field[CustomField.id]
+            this[CustomFieldValue.value] = customFields[field[CustomField.id].value]
+        }
+
+        getTask(taskId) ?: throw RuntimeException("Just created task has been lost...")
+    }
+
+    fun deleteTask(taskId: Long) = transaction(database) {
+        TimeSegment
+        Task.deleteWhere { Task.id.eq(taskId) }
     }
 
 }

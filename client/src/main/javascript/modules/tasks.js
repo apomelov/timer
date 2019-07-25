@@ -6,8 +6,10 @@ import {TASKS_CHANGED} from "./notifications";
 const actions = {
     refreshTasks: () => api.actions.post("/tasks/refresh"),
     createTask: (title, fields) => api.actions.post("/tasks", { title, fields }),
+    updateTask: (id, title, fields) => api.actions.post(`/tasks/${id}/update`, { title, fields }),
     closeTask: (task) => api.actions.post(`/tasks/${task.id}/close`),
     reopenTask: (task) => api.actions.post(`/tasks/${task.id}/reopen`),
+    deleteTask: (task) => api.actions.post(`/tasks/${task.id}/delete`),
     startTiming: (task) => api.actions.post(`/tasks/${task.id}/start`),
     stopTiming: (task) => api.actions.post(`/tasks/${task.id}/stop`)
 };

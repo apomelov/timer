@@ -118,6 +118,26 @@
         </insert>
     </changeSet>
 
+    <changeSet id="13" author="apomelov">
+        <createTable tableName="settings">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="key" type="nvarchar(1024)">
+                <constraints nullable="false" />
+            </column>
+            <column name="stringValue" type="nvarchar(1024)" />
+            <column name="intValue" type="int" />
+            <column name="booleanValue" type="boolean" />
+        </createTable>
+    </changeSet>
+    
+    <changeSet id="14" author="apomelov">
+        <createIndex tableName="settings" indexName="idx_settings_by_key">
+            <column name="key" />
+        </createIndex>
+    </changeSet>
+
     <changeSet id="99" author="apomelov">
         <sql>
             insert into task(title) values('Daily meetings');

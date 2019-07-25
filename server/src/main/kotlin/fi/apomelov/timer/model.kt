@@ -33,3 +33,10 @@ object TimeSegment : LongIdTable("time_segment") {
 object LastActivity : LongIdTable("last_activity") {
     val lastActivity: Column<DateTime> = datetime("last_activity")
 }
+
+object Settings : LongIdTable("settings") {
+    val key: Column<String> = varchar("key", 1024).index()
+    val stringValue: Column<String?> = varchar("stringValue", 1024).nullable()
+    val intValue: Column<Int?> = integer("intValue").nullable()
+    val booleanValue: Column<Boolean?> = bool("booleanValue").nullable()
+}

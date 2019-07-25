@@ -1,11 +1,17 @@
 import {connect} from "react-redux"
 import {bindActionCreators} from "redux"
 import "../../styles/table.pcss"
+import "../../styles/contexmenu.pcss"
 
 import fields from "../modules/fields";
 import tasks from "../modules/tasks"
 import Task from "./Task";
 import segments from "../modules/segments";
+import TaskDetailsDialog from "./TaskDetailsDialog";
+import TaskDeleteDialog from "./TaskDeleteDialog";
+
+
+export const taskContextMenuId = "taskContextMenu";
 
 class TaskList extends React.Component {
 
@@ -15,9 +21,11 @@ class TaskList extends React.Component {
     }
 
     componentDidMount = () => {
-        $(this.refs.newTaskForm).submit(false);
         this.props.refreshFields();
         this.props.refreshTasks();
+        $("html").click(() => {
+            $("#" + taskContextMenuId).hide();
+        });
     };
 
     onTaskCheck = (task) =>
@@ -30,100 +38,110 @@ class TaskList extends React.Component {
             ? this.props.stopTiming(task)
             : this.props.startTiming(task);
 
-    onNewTaskDialogOpen = () => {
-        $(this.refs.newTaskTitle).val("");
-        this.props.fields.forEach(field => {
-            $(this.refs[`newTaskField_${field.id}`]).val("");
-        });
-        this.setState({ validForm: false });
+    onNewTaskDialogOpen = (task) => {
+        const modal = $("#taskDetailModal");
+        modal.data("task", null);
+        modal.modal("show");
     };
 
-    onTaskTitleChange = () => {
-        this.setState({ validForm: !!$(this.refs.newTaskTitle).val() });
+    start = () => {
+        const task = $("#" + taskContextMenuId).data("invokedOn");
+        this.props.startTiming(task);
     };
 
-    onTaskCreate = () => {
-        if (this.state.validForm) {
-            const title = $(this.refs.newTaskTitle).val();
-            const fields = { };
-            this.props.fields.forEach(field => {
-                fields[field.id] = $(this.refs[`newTaskField_${field.id}`]).val();
-            });
-            this.props.createTask(title, fields);
-        }
+    stop = () => {
+        const task = $("#" + taskContextMenuId).data("invokedOn");
+        this.props.stopTiming(task);
     };
 
+    edit = () => {
+        const task = $("#" + taskContextMenuId).data("invokedOn");
+        const modal = $("#taskDetailModal");
+        modal.data("task", task);
+        modal.modal("show");
+    };
 
-    render = () => <div className={"panel panel-default task-panel"}>
+    delete = () => {
+        const task = $("#" + taskContextMenuId).data("invokedOn");
+        const modal = $("#taskDeleteModal");
+        modal.data("task", task);
+        modal.modal("show");
+    };
 
-        <div className="modal fade" id="createTaskModal" tabIndex="-1" role="dialog" aria-labelledby="createTaskModalLabel">
-            <div className="modal-dialog" role="document">
-                <div className="modal-content">
-                    <div className="modal-header">
-                        <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                        <h4 className="modal-title" id="createTaskModalLabel">Create a new task</h4>
-                    </div>
-                    <div className="modal-body">
-                        <form ref="newTaskForm">
-                            <div className="form-group">
-                                <label htmlFor="newTaskTitle">Task title <span style={{color: "red"}}>*</span></label>
-                                <input ref="newTaskTitle" onChange={::this.onTaskTitleChange} className="form-control" id="newTaskTitle" placeholder="Title" />
-                            </div>
-                            {
-                                this.props.fields.map(field =>
-                                    <div key={field.id} className="form-group">
-                                        <label htmlFor={`newTaskField_${field.id}`}>{field.title}</label>
-                                        <input className="form-control" id={`newTaskField_${field.id}`} ref={`newTaskField_${field.id}`} placeholder={field.title} />
-                                    </div>
-                                )
-                            }
-                        </form>
-                    </div>
-                    <div className="modal-footer">
-                        <button type="button" className="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="button" className={"btn btn-primary" + (this.state.validForm ? "" : " disabled")} onClick={::this.onTaskCreate} data-dismiss="modal">Create</button>
-                    </div>
+    render = () => {
+
+        return <div className={"panel panel-default task-panel"}>
+
+            <TaskDetailsDialog />
+
+            <TaskDeleteDialog />
+
+            <div className="panel-heading">
+                <h3 className="panel-title">Task List</h3>
+                <div className="controls">
+                    <button type="button" className="btn btn-default" onClick={::this.onNewTaskDialogOpen}>
+                        <span className="glyphicon glyphicon-plus" aria-hidden="true"/> New task
+                    </button>
+                    {/*<button type="button" className="btn btn-default">*/}
+                        {/*<span className="glyphicon glyphicon-cog" aria-hidden="true"/> Customize fields*/}
+                    {/*</button>*/}
                 </div>
             </div>
-        </div>
 
-        <div className="panel-heading">
-            <h3 className="panel-title">Task List</h3>
-            <div className="controls">
-                <button type="button" className="btn btn-default" data-toggle="modal" data-target="#createTaskModal" onClick={::this.onNewTaskDialogOpen}>
-                    <span className="glyphicon glyphicon-plus" aria-hidden="true" /> New task
-                </button>
-                <button type="button" className="btn btn-default">
-                    <span className="glyphicon glyphicon-cog" aria-hidden="true" /> Customize fields
-                </button>
-            </div>
-        </div>
-        <div className="panel-body">
-            <div className="panel-row task">
-                <div>Title</div>
-                <div>Time</div>
-                <div>
-                    {
-                        this.props.fields.map(field =>
-                            <div key={field.id} data-toggle="tooltip" data-placement="top" title={field.title}>{field.title}</div>
-                        )
-                    }
+            <ul id={taskContextMenuId} className="dropdown-menu taskContextMenu" role="menu" style={{display: "none"}}>
+                <li data-condition={"(task) => !task.active"}>
+                    <a tabIndex="-1" href="#" onClick={::this.start}>
+                        <span className="glyphicon glyphicon-play" aria-hidden="true"/>
+                        Start timing
+                    </a>
+                </li>
+                <li data-condition={"(task) => task.active"}>
+                    <a tabIndex="-1" href="#" onClick={::this.stop}>
+                        <span className="glyphicon glyphicon-stop" aria-hidden="true"/>
+                        Stop timing
+                    </a>
+                </li>
+                <li>
+                    <a tabIndex="-1" href="#" onClick={::this.edit}>
+                        <span className="glyphicon glyphicon-pencil" aria-hidden="true"/>
+                        Edit task
+                    </a>
+                </li>
+                <li>
+                    <a tabIndex="-1" href="#" onClick={::this.delete}>
+                        <span className="glyphicon glyphicon-trash" aria-hidden="true"/>
+                        Delete task
+                    </a>
+                </li>
+            </ul>
+
+            <div className="panel-body">
+
+                <div className="panel-row task">
+                    <div>Title</div>
+                    <div>
+                        {
+                            this.props.fields.map(field =>
+                                <div key={field.id} data-toggle="tooltip" data-placement="top"
+                                     title={field.title}>{field.title}</div>
+                            )
+                        }
+                    </div>
                 </div>
+                {
+                    this.props.tasks.map(task =>
+                        <Task key={task.id} task={task}
+                              fields={this.props.fields}
+                              onCheck={() => this.onTaskCheck(task)}
+                              onDoubleClick={() => this.onTaskDoubleClick(task)}
+                              onEdit={() => {this.onNewTaskDialogOpen(task);$("#taskDetailModal").modal("show");}}
+                              moveSegment={(segmentId) => this.props.moveSegment(segmentId, task.id)}
+                        />
+                    )
+                }
             </div>
-            {
-                this.props.tasks.map(task =>
-                    <Task key={task.id} task={task}
-                          fields={this.props.fields}
-                          onCheck={() => this.onTaskCheck(task)}
-                          onDoubleClick={() => this.onTaskDoubleClick(task)}
-                          moveSegment={(segmentId) => this.props.moveSegment(segmentId, task.id)}
-                    />
-                )
-            }
-        </div>
-    </div>;
-
+        </div>;
+    }
 }
 
 export default connect(
@@ -134,9 +152,6 @@ export default connect(
     dispatch => bindActionCreators({
         refreshFields: fields.actions.refreshFields,
         refreshTasks: tasks.actions.refreshTasks,
-
-        createTask: tasks.actions.createTask,
-
         closeTask: tasks.actions.closeTask,
         reopenTask: tasks.actions.reopenTask,
         startTiming: tasks.actions.startTiming,
