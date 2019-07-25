@@ -5,11 +5,13 @@ import { mapNotNull } from "../utils"
 import api from "./api"
 import tasks from "./tasks"
 import times from "./times"
+import notifications from "./notifications"
 
 export const modules = {
     api,
     tasks,
-    times
+    times,
+    notifications
 };
 
 export const rootReducer = combineReducers(

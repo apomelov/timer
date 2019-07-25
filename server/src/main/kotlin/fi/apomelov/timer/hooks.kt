@@ -118,14 +118,11 @@ class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, Nati
     @Volatile
     var lastActivity: Long = 0L
 
-    @Autowired
-    lateinit var database: Database
+    @Autowired lateinit var database: Database
+    @Autowired lateinit var timeSegmentService: TimeSegmentService
+    @Autowired lateinit var taskService: TaskService
+    @Autowired lateinit var notificator: Notificator
 
-    @Autowired
-    lateinit var timeSegmentService: TimeSegmentService
-
-    @Autowired
-    lateinit var taskService: TaskService
 
     override fun nativeMousePressed(e: NativeMouseEvent) = processEvent()
     override fun nativeMouseMoved(e: NativeMouseEvent) = processEvent()
@@ -165,6 +162,7 @@ class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, Nati
                     lastActivity = curr
                 } finally {
                     semaphore.release()
+                    notificator.notifyRefreshAll()
                 }
 //                WelcomeBackDialog()
             }

@@ -24,11 +24,11 @@ noArg {
 }
 
 val springBootVersion = "2.0.5.RELEASE"
-val springBootStarters = listOf("web", "jdbc")
+val springBootStarters = listOf("jdbc", "web", "websocket")
 
 dependencies {
 
-//    implementation(project(":client"))
+    implementation(project(":client"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))

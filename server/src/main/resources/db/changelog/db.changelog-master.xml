@@ -39,14 +39,14 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="3.5" author="apomelov">
+    <changeSet id="4" author="apomelov">
         <insert tableName="custom_field">
             <column name="id" valueNumeric="1" />
             <column name="title" value="Jira issue" />
         </insert>
     </changeSet>
 
-    <changeSet id="4" author="apomelov">
+    <changeSet id="5" author="apomelov">
         <createTable tableName="custom_field_value">
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" />
@@ -61,19 +61,19 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="5" author="apomelov">
+    <changeSet id="6" author="apomelov">
         <createIndex tableName="custom_field_value" indexName="idx_custom_field_by_task">
             <column name="task" />
         </createIndex>
     </changeSet>
 
-    <changeSet id="6" author="apomelov">
+    <changeSet id="7" author="apomelov">
         <createIndex tableName="custom_field_value" indexName="idx_custom_field_by_field">
             <column name="field" />
         </createIndex>
     </changeSet>
 
-    <changeSet id="7" author="apomelov">
+    <changeSet id="8" author="apomelov">
         <createTable tableName="time_segment">
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" />
@@ -88,19 +88,19 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="8" author="apomelov">
+    <changeSet id="9" author="apomelov">
         <createIndex tableName="time_segment" indexName="idx_time_segment_by_task">
             <column name="task" />
         </createIndex>
     </changeSet>
 
-    <changeSet id="9" author="apomelov">
+    <changeSet id="10" author="apomelov">
         <createIndex tableName="time_segment" indexName="idx_time_segment_by_start">
             <column name="start" />
         </createIndex>
     </changeSet>
 
-    <changeSet id="10" author="apomelov">
+    <changeSet id="11" author="apomelov">
         <createTable tableName="last_activity">
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" />
@@ -111,7 +111,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="11" author="apomelov">
+    <changeSet id="12" author="apomelov">
         <insert tableName="last_activity">
             <column name="id" valueNumeric="1" />
             <column name="last_activity" valueComputed="now()" />

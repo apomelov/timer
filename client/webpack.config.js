@@ -44,10 +44,10 @@ module.exports = (env, argv) => {
             port: 9000,
             proxy: {
                 "/api": "http://localhost:8080",
-                // "/socket": {
-                //     target: "ws://localhost:8080",
-                //     ws: true
-                // }
+                "/socket": {
+                    target: "ws://localhost:8080",
+                    ws: true
+                }
             }
         },
         module: {

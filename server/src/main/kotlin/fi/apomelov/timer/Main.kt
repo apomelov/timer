@@ -7,12 +7,21 @@ import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.jetbrains.exposed.sql.Database
 import org.joda.time.DateTime
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.stereotype.Component
+import org.springframework.web.socket.CloseStatus
+import org.springframework.web.socket.TextMessage
+import org.springframework.web.socket.WebSocketSession
+import org.springframework.web.socket.config.annotation.EnableWebSocket
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
+import org.springframework.web.socket.handler.TextWebSocketHandler
+import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.PostConstruct
 import javax.sql.DataSource
 import javax.swing.UIManager.getSystemLookAndFeelClassName
@@ -44,15 +53,46 @@ class JacksonMapper : ObjectMapper() {
 }
 
 
+@Component
+class Notificator : TextWebSocketHandler() {
+
+    val log = LoggerFactory.getLogger(Notificator::class.java)
+
+    private val listeners = ConcurrentHashMap<String, WebSocketSession>()
+
+    override fun afterConnectionEstablished(session: WebSocketSession) {
+        log.info("Connected websocket listener: ${session.id}")
+        listeners[session.id] = session
+    }
+
+    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        log.info("Disconnected websocket listener: ${session.id}")
+        listeners.remove(session.id)
+    }
+
+    fun notifyRefreshAll() = listeners.values.forEach {
+        it.sendMessage(TextMessage("{ }"))
+    }
+
+}
+
 @SpringBootApplication
 @EnableScheduling
-open class ApplicationContext {
+@EnableWebSocket
+open class ApplicationContext : WebSocketConfigurer {
 
     @Autowired
     lateinit var dataSource: DataSource
 
+    @Autowired
+    lateinit var notificator: Notificator
+
     @Bean
     open fun database() = Database.connect(dataSource)
+
+    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+        registry.addHandler(notificator, "/socket")
+    }
 
 }
 
