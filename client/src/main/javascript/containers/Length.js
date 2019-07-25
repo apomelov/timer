@@ -1,6 +1,6 @@
 import {connect} from "react-redux"
 import "react-datepicker/dist/react-datepicker.css"
-import "../../styles/datepicker.css"
+import "../../styles/datepicker.pcss"
 import moment from "moment";
 
 

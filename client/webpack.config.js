@@ -54,7 +54,19 @@ module.exports = (env, argv) => {
             rules: [
                 { test: /\.js$/,   use: jsLoader, exclude: /node_modules/ },
                 { test: /\.html$/, use: htmlLoader },
-                { test: /\.css$/, use: ["style-loader", "css-loader"] },
+                {
+                    test: /\.p?css$/,
+                    use: [{
+                        loader: 'style-loader',
+                    }, {
+                        loader: 'css-loader',
+                        options: {
+                            importLoaders: 1,
+                        }
+                    }, {
+                        loader: 'postcss-loader'
+                    }]
+                },
                 { test: /\.(svg|png|jpe?g|gif|ico)$/, use: limitedUrlLoader },
                 { test: /\.(woff2?|ttf|eot)$/, use: limitedUrlLoader }
             ]

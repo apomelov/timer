@@ -24,13 +24,11 @@ noArg {
 }
 
 val springBootVersion = "2.0.5.RELEASE"
-val springBootStarters = listOf("web"
-        , "jdbc"
-)
+val springBootStarters = listOf("web", "jdbc")
 
 dependencies {
 
-    implementation(project(":client"))
+//    implementation(project(":client"))
 
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
@@ -45,6 +43,9 @@ dependencies {
     implementation("org.liquibase", "liquibase-core", "3.6.2")
     implementation("joda-time", "joda-time", "2.10")
     implementation("org.jetbrains.exposed", "exposed", "0.10.5")
+
+    implementation("com.1stleg", "jnativehook", "2.1.0")
+
 }
 
 tasks {

@@ -40,7 +40,7 @@ function* saga() {
     yield takeLatest(LOAD_INTERVALS, function* () {
         const start = (yield select(store => store.times.start)).startOf("day").valueOf();
         const end = (yield select(store => store.times.end)).endOf("day").valueOf();
-        yield put(api.actions.callApi(`/intervals?start=${start}&end=${end}`, "GET", null, INTERVALS_LOADED))
+        yield put(api.actions.callApi(`/timeSegments?start=${start}&end=${end}`, "GET", null, INTERVALS_LOADED))
     });
 
     yield takeLatest(SET_INTERVAL, function* () {

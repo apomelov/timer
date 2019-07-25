@@ -8,12 +8,15 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.jetbrains.exposed.sql.Database
 import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.annotation.Bean
+import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
 import javax.sql.DataSource
+import javax.swing.UIManager.getSystemLookAndFeelClassName
+import javax.swing.UIManager.setLookAndFeel
 
 
 @Component
@@ -42,6 +45,7 @@ class JacksonMapper : ObjectMapper() {
 
 
 @SpringBootApplication
+@EnableScheduling
 open class ApplicationContext {
 
     @Autowired
@@ -52,10 +56,16 @@ open class ApplicationContext {
 
 }
 
-
 fun main(args: Array<String>) {
 
-    SpringApplication.run(ApplicationContext::class.java)
+    SpringApplicationBuilder(ApplicationContext::class.java)
+            .headless(false)
+            .run(*args)
+
+    try {
+        setLookAndFeel(getSystemLookAndFeelClassName())
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 
 }
-

@@ -1,0 +1,91 @@
+div.application-panel {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+
+    > div.panel {
+        height: 100%;
+        display: flex;
+        flex-flow: column;
+
+        flex-shrink: 1;
+        flex-basis: 0;
+
+        > div.panel-heading {
+            flex-grow: 0;
+            flex-shrink: 1;
+            flex-basis: auto;
+
+            display: flex;
+            align-items: center;
+        }
+
+        > div.panel-body {
+            padding: 0;
+
+            flex-grow: 1;
+            flex-shrink: 1;
+            flex-basis: 0;
+
+            overflow-y: scroll;
+
+            > div.panel-row {
+                display: flex;
+                border-top: solid 1px #ddd;
+
+                &:first-child {
+                  border-bottom: solid 1px #ddd;
+                  font-weight: bold;
+                  position: sticky;
+                  top: 0;
+                }
+                &:nth-child(odd) { background-color: #f9f9f9; }
+                &:nth-child(even) { background-color: #fff; }
+                &.active { background-color: #ddffdd; }
+                &.closed { text-decoration: line-through black solid; }
+                > div {
+                    padding: 10px;
+                    flex-shrink: 0;
+                    flex-basis: 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+            }
+
+        }
+
+        &.task-panel {
+            flex-grow: 6;
+            > div.panel-body > div.panel-row > div {
+                &:nth-child(1) { flex-grow: 5; }
+                &:nth-child(2) { flex-grow: 1; }
+                &:nth-child(3) { flex-grow: 4; }
+                &:nth-child(3) {
+                    padding: 10px;
+                    display: flex;
+                    > div {
+                        flex-grow: 1;
+                        flex-shrink: 0;
+                        flex-basis: 0;
+                        overflow: hidden;
+                        margin-right: 10px;
+                        &:last-child {
+                            margin-right: 0;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        &.intervals-panel {
+            flex-grow: 4;
+            > div.panel-body > div.panel-row {
+                > div:nth-child(1) { flex-grow: 5; }
+                > div:nth-child(2) { flex-grow: 1; }
+                > div:nth-child(3) { flex-grow: 4; }
+            }
+        }
+
+    }
+}
