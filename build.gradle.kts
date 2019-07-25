@@ -3,6 +3,6 @@ allprojects {
         maven { url = uri("https://kotlin.bintray.com/kotlinx") }
         jcenter()
     }
-    project.group = "group"
+    project.group = "templates"
     project.version = "1.0"
 }

@@ -8,7 +8,7 @@ plugins {
 }
 
 application {
-    applicationName = "template"
+    applicationName = "client-server"
     mainClassName = "template/MainKt"
 }
 
