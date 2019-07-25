@@ -42,7 +42,7 @@ div.application-panel {
                 &:nth-child(odd) { background-color: #f9f9f9; }
                 &:nth-child(even) { background-color: #fff; }
 
-                &.active { background-color: #ddffdd; }
+                &.active { background-color: #dfd; }
                 &.closed { text-decoration: line-through black solid; }
 
                 > div {
@@ -61,17 +61,22 @@ div.application-panel {
 
         &.task-panel {
             flex-grow: 6;
-            > div.panel-body > div.panel-row > div {
-                &:last-child {
-                    display: flex;
-                    > div {
-                        flex-grow: 1;
-                        flex-shrink: 0;
-                        flex-basis: 0;
-                        overflow: hidden;
-                        margin-right: 10px;
-                        &:last-child {
-                            margin-right: 0;
+            > div.panel-body > div.panel-row {
+                &.aimed {
+                    background-color: #ffd;
+                }
+                > div {
+                    &:last-child {
+                        display: flex;
+                        > div {
+                            flex-grow: 1;
+                            flex-shrink: 0;
+                            flex-basis: 0;
+                            overflow: hidden;
+                            margin-right: 10px;
+                            &:last-child {
+                                margin-right: 0;
+                            }
                         }
                     }
                 }
@@ -81,6 +86,9 @@ div.application-panel {
 
         &.intervals-panel {
             flex-grow: 4;
+            > div.panel-body > div.panel-row.dragging {
+                color: #ccc;
+            }
         }
 
     }

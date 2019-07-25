@@ -37,7 +37,7 @@ class TaskService {
             .join(TimeSegment, JoinType.LEFT, Task.id, TimeSegment.task) { TimeSegment.end.isNull() }
             .slice(Task.id, Task.title, Task.closedAt, CustomFieldValue.id, CustomFieldValue.field, CustomFieldValue.value, TimeSegment.id)
 
-    private fun Query.mapTasks() = groupBy { it[Task.id] }
+    private fun Query.mapTasks() = orderBy(Task.id, false).groupBy { it[Task.id] }
             .mapValues { (_, fields) ->
                 TaskTO(fields.first()).also { task ->
                     fields.filter { it[CustomFieldValue.id] != null }
@@ -73,6 +73,23 @@ class TaskService {
         }
     }
 
+    fun createTask(title: String, customFields: Map<Long, String>): TaskTO = transaction(database) {
+
+        val taskId = Task.insertAndGetId {
+            it[Task.title] = title
+        }
+
+        val customFieldsToInsert = CustomField.selectAll().filterNot { customFields[it[CustomField.id].value].isNullOrEmpty() }
+
+        CustomFieldValue.batchInsert(customFieldsToInsert) { field ->
+            this[CustomFieldValue.task] = taskId
+            this[CustomFieldValue.field] = field[CustomField.id]
+            this[CustomFieldValue.value] = customFields[field[CustomField.id].value]
+        }
+
+        getTask(taskId.value) ?: throw RuntimeException("Just created task has been lost...")
+    }
+
 }
 
 @Component
@@ -86,6 +103,7 @@ class TimeSegmentService {
                 .join(Task, JoinType.LEFT, TimeSegment.task, Task.id)
                 .slice(TimeSegment.id, Task.title, TimeSegment.start, TimeSegment.end)
                 .select()
+                .orderBy(TimeSegment.start, false)
                 .map(::TimeSegmentTO)
     }
 
@@ -102,6 +120,12 @@ class TimeSegmentService {
         TimeSegment.insert {
             it[TimeSegment.task] = EntityID(taskId, Task)
             it[TimeSegment.start] = at
+        }
+    }
+
+    fun move(segmentId: Long, targetTaskId: Long) = transaction(database) {
+        TimeSegment.update({ TimeSegment.id.eq(segmentId) }) {
+            it[TimeSegment.task] = EntityID(targetTaskId, Task)
         }
     }
 

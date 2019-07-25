@@ -1,5 +1,6 @@
 package fi.apomelov.timer
 
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jnativehook.GlobalScreen
@@ -9,6 +10,8 @@ import org.jnativehook.mouse.NativeMouseEvent
 import org.jnativehook.mouse.NativeMouseInputListener
 import org.jnativehook.mouse.NativeMouseWheelEvent
 import org.jnativehook.mouse.NativeMouseWheelListener
+import org.joda.time.DateTime
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.DependsOn
 import org.springframework.stereotype.Component
 import java.awt.BorderLayout
@@ -24,7 +27,7 @@ import javax.swing.*
 import javax.swing.BorderFactory.createLineBorder
 import javax.swing.BorderFactory.createTitledBorder
 
-const val activityThreshold = 5000L
+const val activityThreshold = 10000L
 
 
 val semaphore = Semaphore(1)
@@ -108,12 +111,21 @@ class WelcomeBackDialog : JDialog(null as Frame?, "Welcome back to your computer
 }
 
 
-//@Component
-//@DependsOn("database", "liquibase")
+@Component
+@DependsOn("liquibase")
 class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, NativeKeyListener {
 
     @Volatile
     var lastActivity: Long = 0L
+
+    @Autowired
+    lateinit var database: Database
+
+    @Autowired
+    lateinit var timeSegmentService: TimeSegmentService
+
+    @Autowired
+    lateinit var taskService: TaskService
 
     override fun nativeMousePressed(e: NativeMouseEvent) = processEvent()
     override fun nativeMouseMoved(e: NativeMouseEvent) = processEvent()
@@ -134,7 +146,26 @@ class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, Nati
             lastActivity = curr
         } else {
             if (semaphore.tryAcquire()) {
-                lastActivity = curr
+                try {
+                    transaction(database) {
+
+                        val activeTask = taskService.getTasks().find { it.active }
+
+                        timeSegmentService.stopTiming(DateTime(lastActivity))
+
+                        timeSegmentService.startTiming(1, DateTime(lastActivity))
+                        timeSegmentService.stopTiming()
+
+                        activeTask?.let {
+                            timeSegmentService.startTiming(it.id)
+                        }
+
+                    }
+
+                    lastActivity = curr
+                } finally {
+                    semaphore.release()
+                }
 //                WelcomeBackDialog()
             }
         }
@@ -142,7 +173,7 @@ class GlobalEventHook : NativeMouseInputListener, NativeMouseWheelListener, Nati
 
     @PostConstruct
     fun registerHooks() {
-        transaction {
+        transaction(database) {
             lastActivity = LastActivity.selectAll().first()[LastActivity.lastActivity].millis
         }
         GlobalScreen.registerNativeHook()

@@ -1,7 +1,8 @@
 import { put, select, takeLatest, takeEvery } from "redux-saga/effects"
 
-import api from "../modules/api"
+import api from "./api"
 import moment from "moment";
+import tasks from "./tasks";
 
 /* Action types */
 const SET_INTERVAL = "/times/setInterval";
@@ -9,11 +10,14 @@ const LOAD_INTERVALS = "/times/loadIntervals";
 const INTERVALS_LOADED = "/times/intervalsLoaded";
 const TICK = "/times/tick";
 
+const MOVE_INTERVAL = "/times/moveInterval";
+const INTERVAL_MOVED = "/times/intervalMoved";
 
 /* Action creators */
 const actions = {
-    setInterval: (start, end) => ({ type: SET_INTERVAL, payload: { start: start, end: end} }),
+    setInterval: (start, end) => ({ type: SET_INTERVAL, payload: { start, end} }),
     loadIntervals: () => ({ type: LOAD_INTERVALS }),
+    moveInterval: (intervalId, targetTaskId) => ({ type: MOVE_INTERVAL, payload: { intervalId, targetTaskId } })
 };
 
 
@@ -24,7 +28,7 @@ const reducer = (state = { intervals: [], openInterval: null, start: moment(), e
             const { start, end} = payload;
             return {...state, start, end};
         case INTERVALS_LOADED:
-            return {...state, intervals: payload.reverse()};
+            return {...state, intervals: payload};
         case TICK:
             return {...state, now: payload.valueOf()};
         default:
@@ -45,6 +49,14 @@ function* saga() {
 
     yield takeLatest(SET_INTERVAL, function* () {
         yield put(actions.loadIntervals());
+    });
+
+    yield takeEvery(MOVE_INTERVAL, function* ({ payload: { intervalId, targetTaskId }}) {
+        yield put(api.actions.callApi(`/timeSegments/${intervalId}/move`, "POST", targetTaskId, INTERVAL_MOVED))
+    });
+
+    yield takeLatest(INTERVAL_MOVED, function* () {
+        yield put(tasks.actions.loadTasks())
     });
 
     yield takeEvery(TICK, function* () {

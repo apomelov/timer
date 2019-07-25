@@ -77,7 +77,7 @@ class TimeController {
     lateinit var timeSegmentService: TimeSegmentService
 
     @GetMapping("/timeSegments")
-    fun getIntervals(@RequestParam start: Long,
+    fun getSegments(@RequestParam start: Long,
                      @RequestParam end: Long,
                      @RequestParam(required = false) task: Long?) = timeSegmentService.getTimeSegments {
 
@@ -88,5 +88,8 @@ class TimeController {
                     }
                 }
     }
+
+    @PostMapping("/timeSegments/{id}/move")
+    fun moveSegment(@PathVariable id: Long, @RequestBody task: Long) = timeSegmentService.move(id, task)
 
 }

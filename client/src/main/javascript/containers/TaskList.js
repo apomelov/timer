@@ -5,6 +5,7 @@ import "../../styles/table.pcss"
 
 import tasks from "../modules/tasks"
 import Task from "./Task";
+import times from "../modules/times";
 
 class TaskList extends React.Component {
 
@@ -35,6 +36,7 @@ class TaskList extends React.Component {
                           customFields={this.props.customFields}
                           onCheck={() => this.onCheck(task)}
                           onDoubleClick={() => this.onDoubleClick(task)}
+                          moveInterval={(intervalId) => this.props.moveInterval(intervalId, task.id)}
                     />
                 )
             }
@@ -53,6 +55,7 @@ export default connect(
         closeTask: tasks.actions.closeTask,
         reopenTask: tasks.actions.reopenTask,
         startTiming: tasks.actions.startTiming,
-        stopTiming: tasks.actions.stopTiming
+        stopTiming: tasks.actions.stopTiming,
+        moveInterval: times.actions.moveInterval
     }, dispatch)
 )(TaskList);

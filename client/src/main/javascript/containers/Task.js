@@ -1,4 +1,19 @@
 import "../../styles/table.pcss"
+import {DropTarget} from "react-dnd";
+
+
+const squareTarget = {
+    drop(props, monitor) {
+        props.moveInterval(monitor.getItem().intervalId);
+    }
+};
+
+function collect(connect, monitor) {
+    return {
+        connectDropTarget: connect.dropTarget(),
+        isOver: monitor.isOver()
+    };
+}
 
 class Task extends React.Component {
 
@@ -7,13 +22,13 @@ class Task extends React.Component {
     }
 
     render = () => {
-        const { task, customFields, onCheck, onDoubleClick} = this.props;
+        const { task, customFields, onCheck, onDoubleClick, connectDropTarget, isOver } = this.props;
         let cls = "panel-row task";
         if (task.closedAt) cls += " closed";
         if (task.active) cls += " active";
+        if (isOver) cls += " aimed";
 
-
-        return <div className={cls} onDoubleClick={() => onDoubleClick()}>
+        return connectDropTarget(<div className={cls} onDoubleClick={() => onDoubleClick()}>
             <div data-toggle="tooltip" data-placement="top" title={task.title}>
                 <input type="checkbox" style={{marginRight: "8px"}} checked={!!task.closedAt}
                        onChange={() => onCheck()}/>
@@ -28,8 +43,8 @@ class Task extends React.Component {
                     })
                 }
             </div>
-        </div>;
+        </div>);
     }
 }
 
-export default Task;
+export default DropTarget("timeSegment", squareTarget, collect)(Task);
